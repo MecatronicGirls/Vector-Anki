@@ -1,0 +1,101 @@
+# This is the part of the code for Vector's actions and recording the accelerometer and pitch angle results to be sent in text documents
+
+# We import Vector
+import anki_vector
+
+# We import the tools needed
+from anki_vector.util import distance_mm, speed_mmps,time
+import math # to use pi function
+
+# We rename Vector as robot to simplify the script
+with anki_vector.Robot() as robot:
+    
+    # We get the battery voltage and battery level to see if Vector can carry out the task
+    battery_state = robot.get_battery_state()
+    print("Robot battery voltage: {0}".format(battery_state.battery_volts))
+    print("Robot battery Level: {0}".format(battery_state.battery_level))
+    
+    # The text documents are cleared in case values from a previous trial are written
+    open("accel_values.txt", 'w')
+    open("pitch_angle.txt", 'w')
+    
+    # The text documents are opened
+    accel_values_txt = open("accel_values.txt", "a+")
+    pitch_angle_txt = open("pitch_angle.txt", "a+")
+    
+    # We write a loop "while not", the robot records the results if nobody touches his back
+    while not robot.touch.last_sensor_reading.is_being_touched:
+        
+        # We fix the speeds for the wheels (left and right). If the two speeds are identical, the robot will drive straight
+        # If the speed is positif, the robot drives forward. If the speed is negatif, the robot drives backward.
+        robot.motors.set_wheel_motors(25, 25)
+        
+        # We ask Vector to lift his arms to avoid problems during its ascend or descend
+        robot.motors.set_lift_motor(20.0) # A lift of 20 radians per second assures his arms are at its maximal height
+        
+        # Vector's laser that detects objects or walls is deactivated to allow him to confront steep hills.
+        robot.vision.enable_custom_object_detection()
+        
+        # The values are taken every 0.5 seconds
+        time.sleep(0.5)
+       
+       # We read values from the gyroscope, the accelerometer and the pitch angle
+        # Gyroscope values
+        current_gyro = robot.gyro
+        print("gyro: {0}".format(current_gyro))
+        
+        # Pitch angle values, this shows when Vector begins climbing a hill
+        # Values are converted to degrees
+        current_pose_pitch_deg = robot.pose_pitch_rad*180/math.pi
+        print("pitch angle rad: {0}".format(current_pose_pitch_deg))
+        
+        # Accelerometer values
+        # The accelerometer values are rounded, because the graphic doesn't accept decimals
+        current_accel = robot.accel
+        current_accel_x = round(robot.accel.x)
+        current_accel_y = round(robot.accel.y)
+        current_accel_z = round(robot.accel.z)
+        print("accel: {0}".format(current_accel))
+        
+        # Accelerometer and pitch angle values are sent and written in text documents
+        accel_values_txt.writelines(["{0}".format(current_accel_x), ",", "{0}".format(current_accel_y), ",", "{0}\n".format(current_accel_z)])
+        pitch_angle_txt.writelines(["{0}\n".format(current_pose_pitch_deg)])
+    
+    # The program stops when the loop "while not" is broken by touching Vector's back
+    if robot.touch.last_sensor_reading.is_being_touched:
+        robot.behavior.say_text("Ouch") # Vector says "Ouch" when the loop is broken
+        robot.disconnect() # Vector is disconnected
+        
+        
+# This is the second part of the code to make the 3D graphic
+# This part of the code should be run seperately from the first part to be able to plot the acceleration correctly
+
+# We import the tools and functions needed for the 3D graphic
+from mpl_toolkits import mplot3d
+import matplotlib.pyplot as plt
+import csv # function will import the values from a text document
+
+# We fix the title and axis of the graphic
+ax = plt.axes(projection="3d")
+plt.title('Accéléromètre de Vector\n(mm/s^2)')
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+# We fix the strings of variables for each axis of the graphic
+x_points = []
+z_points = []
+y_points = []
+
+# We open the document that contains the values of Vector's accelerometer
+with open('donnees_gyro.txt', 'r') as csvfile:
+    # We place the values from the text document in each axis
+    plots = csv.reader(csvfile, delimiter=',')
+    for row in plots:
+        x_points.append(int(row[0]))
+        y_points.append(int(row[1]))
+        z_points.append(int(row[2]))
+
+# We write the 3D graphic
+ax.scatter3D(x_points, y_points, z_points, c=z_points, cmap='hsv')
+plt.show()
