@@ -1,3 +1,19 @@
+# We decided to study Vector’s gyroscope for a mechatronics class.
+# We quickly found out there is little information online about this subject.
+# We designed an experiment to analyse Vector’s gyroscope.
+# A gyroscope is a sensor that measures the orientation and the acceleration of a device, in our case, Vector.
+# The accelerometer is part of the gyroscope. These sensors are present in the Vector’s IMU (inertial measurement unit).
+# This allows him to know if someone picks him up.
+# This technology is seen in smart phones, airplanes, navigation systems, robots and other electronics.
+# We mainly focused on the accelerometer since the values were bigger numbers.
+# We were able to write and study 3D plots of Vector’s acceleration while climbing up small hills (10-20 degrees).
+# This code is split into two parts.
+# The first part makes Vector move and record its accelerometer and pitch angle results in text documents to study later.
+# The second part will make a 3D plot of Vector’s acceleration.
+# The two codes must be run separately to be able to plot Vector’s acceleration correctly.
+# We do not have an extensive background in coding, this explains why the code is split into two parts.
+# For this code to work, two text files must be created. One called "accel_values.txt" and the other "pitch_angle.txt".
+
 # This is the part of the code for Vector's actions and recording the accelerometer and pitch angle results to be sent in text documents
 
 # We import Vector
